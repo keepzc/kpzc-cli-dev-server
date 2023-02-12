@@ -22,6 +22,19 @@ module.exports = appInfo => {
   const userConfig = {
     // myAppName: 'egg',
   };
+  // add websocket
+  config.io = {
+    namespace: {
+      '/': {
+        connectionMiddleware: ['auth'],
+        packetMiddleware: ['filter'],
+      },
+      '/chat': {
+        connectionMiddleware: ['auth'],
+        packetMiddleware: [],
+      },
+    },
+  };
 
   return {
     ...config,

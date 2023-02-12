@@ -9,7 +9,8 @@
   "dependencies": {
     "@pick-star/cli-mongodb": "^1.0.3",
     "egg": "^3",
-    "egg-scripts": "^2"
+    "egg-scripts": "^2",
+    "egg-socket.io": "^4.1.6"
   },
   "devDependencies": {
     "egg-bin": "^5",
