@@ -17,8 +17,8 @@ async function createCloudBuildTask(ctx, app) {
     name: task.name,
     version: task.version,
     branch: task.branch,
-    buildCmd: task.buildCmd
-  })
+    buildCmd: task.buildCmd,
+  }, ctx)
 }
 
 module.exports = app => {
