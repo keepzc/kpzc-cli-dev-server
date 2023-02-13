@@ -6,3 +6,7 @@ exports.io = {
   package: 'egg-socket.io',
 };
 
+exports.redis = {
+  enable: true,
+  package: 'egg-redis',
+}

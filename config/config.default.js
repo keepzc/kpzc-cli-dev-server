@@ -1,7 +1,13 @@
 /* eslint valid-jsdoc: "off" */
 
 'use strict';
-
+const REDIS_PORT = 6379
+const REDIS_HOST = '127.0.0.1'
+const REDIS_PWD = ''
+// aliyun
+// const REDIS_PORT = 6379
+// const REDIS_HOST = '47.93.58.48'
+// const REDIS_PWD = ''
 /**
  * @param {Egg.EggAppInfo} appInfo app info
  */
@@ -35,6 +41,14 @@ module.exports = appInfo => {
       },
     },
   };
+  config.redis = {
+    client: {
+      port: REDIS_PORT,         
+      host: REDIS_HOST,
+      password: REDIS_PWD,
+      db: 0,
+    },
+  }
 
   return {
     ...config,
