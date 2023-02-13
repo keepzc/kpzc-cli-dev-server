@@ -34,11 +34,7 @@ module.exports = appInfo => {
       '/': {
         connectionMiddleware: ['auth'],
         packetMiddleware: ['filter'],
-      },
-      '/chat': {
-        connectionMiddleware: ['auth'],
-        packetMiddleware: [],
-      },
+      }
     },
   };
   config.redis = {
