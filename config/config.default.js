@@ -33,7 +33,7 @@ module.exports = appInfo => {
     namespace: {
       '/': {
         connectionMiddleware: ['auth'],
-        packetMiddleware: ['filter'],
+        packetMiddleware: [],
       }
     },
   };

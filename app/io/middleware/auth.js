@@ -1,12 +1,28 @@
 // app/io/middleware/auth.js
 'use strict';
-
+const REDIS_PREFIX = "cloudbuild"
 module.exports = () => {
   return async (ctx, next) => {
-    const {socket, logger} = ctx
+    const {app, socket, logger, helper} = ctx
+    const { id } = socket
+    const { redis } = app
     const query = socket.handshake.query
-    logger.info('query', query)
-    await next();
-    console.log('disconnect!');
+    try {
+      socket.emit(id, helper.parseMsg('connect', {
+        type: 'connect',
+        message:'云构建服务连接成功'
+      }))
+      let hasTask = await redis.get(`${REDIS_PREFIX}:${id}`)
+      console.log(hasTask);
+      if(!hasTask){
+        await redis.set(`${REDIS_PREFIX}:${id}`, JSON.stringify(query))
+      }
+      hasTask = await redis.get(`${REDIS_PREFIX}:${id}`)
+      logger.info('query', hasTask)
+      await next();
+      console.log('disconnect!');
+    } catch (e) {
+      logger.error('build error', e.message)
+    }
   };
 };
