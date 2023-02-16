@@ -43,6 +43,47 @@ class CloudBuildTask {
     await this._git.checkout(['-b', this._branch, `origin/${this._branch}`])
     return fs.existsSync(this._sourceCodeDir) ? this.success() : this.failed()
   }
+  async install() {
+    let res = true
+    res &&
+      (res = await this.execCommand(
+        'npm install --registry=https://registry.npm.taobao.org'
+      ))
+    return res ? this.success() : this.failed()
+  }
+  execCommand(command) {
+    // npm install -> ['npm', 'install']
+    const commands = command.split(' ')
+    if (commands.length === 0) {
+      return null
+    }
+    const firstCommand = commands[0]
+    const leftCommand = commands.slice(1) || []
+    return new Promise((resolve) => {
+      const p = exec(
+        firstCommand,
+        leftCommand,
+        {
+          cwd: this._sourceCodeDir
+        },
+        { stdio: 'pipe' }
+      )
+      p.on('error', (e) => {
+        this._ctx.logger.error('build error', e)
+        resolve(false)
+      })
+      p.on('exit', (c) => {
+        this._ctx.logger.info('build exit', c)
+        resolve(true)
+      })
+      p.stdout.on('data', (data) => {
+        this._ctx.socket.emit('building', data.toString())
+      })
+      p.stderr.on('data', (data) => {
+        this._ctx.socket.emit('building', data.toString())
+      })
+    })
+  }
   failed(message, data) {
     return this.response(FAILED, message, data)
   }
@@ -54,5 +95,12 @@ class CloudBuildTask {
     }
   }
 }
+function exec(command, args, options) {
+  const win32 = process.platform === 'win32'
 
+  const cmd = win32 ? 'cmd' : command
+  const cmdArgs = win32 ? ['/c'].concat(command, args) : args
+
+  return require('child_process').spawn(cmd, cmdArgs, options || {})
+}
 module.exports = CloudBuildTask

@@ -54,6 +54,32 @@ async function download(cloudBuildTask, socket, helper) {
   }
 }
 
+async function install(cloudBuildTask, socket, helper) {
+  socket.emit(
+    'build',
+    helper.parseMsg('install dependencies', {
+      message: '项目开始安装依赖'
+    })
+  )
+  const installRes = await cloudBuildTask.install()
+  if (!installRes || installRes.code === FAILED) {
+    socket.emit(
+      'build',
+      helper.parseMsg('install failed', {
+        message: '项目安装依赖失败'
+      })
+    )
+    return
+  } else {
+    socket.emit(
+      'build',
+      helper.parseMsg('install dependencies', {
+        message: '项目安装依赖成功'
+      })
+    )
+  }
+}
+
 async function createCloudBuildTask(ctx, app) {
   const { socket, helper } = ctx
   const client = socket.id
@@ -87,6 +113,7 @@ module.exports = (app) => {
       try {
         await prepare(cloudBuildTask, socket, helper)
         await download(cloudBuildTask, socket, helper)
+        await install(cloudBuildTask, socket, helper)
       } catch (e) {
         socket.emit(
           'build',
