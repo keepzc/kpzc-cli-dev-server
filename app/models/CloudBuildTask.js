@@ -5,6 +5,8 @@ const userHome = require('os').homedir()
 const fse = require('fs-extra')
 const Git = require('simple-git')
 const { SUCCESS, FAILED } = require('../const')
+// const config = require('../../config/db')
+// const OSS = require('../models/OSS')
 
 class CloudBuildTask {
   constructor(options, ctx) {
@@ -15,21 +17,28 @@ class CloudBuildTask {
     this._version = options.version // 项目版本
     this._branch = options.branch // 仓库分支号
     this._buildCmd = options.buildCmd // 构建命令
-    //缓存目录
     this._dir = path.resolve(
       userHome,
       '.kpzc-cli-dev',
       'cloudbuild',
       `${this._name}@${this._version}`
-    )
+    ) //缓存目录
+    this._prod = options.prod // 是否正式发布
     this._sourceCodeDir = path.resolve(this._dir, this._name) // 缓存源码的目录
     this._logger.info('_dir', this._dir)
     this._logger.info('_sourceCodeDir', this._sourceCodeDir)
+    this._logger.info('_prod', this._prod)
   }
   async prepare() {
     fse.ensureDirSync(this._dir)
     fse.emptyDirSync(this._dir)
     this._git = new Git(this._dir)
+    if (this._prod) {
+      // this.oss = new OSS(config.OSS_PROD_BUCKET)
+    } else {
+      // this.oss = new OSS(config.OSS_DEV_BUCKET)
+    }
+    // console.log(this.oss)
     return this.success()
   }
   success(message, data) {
@@ -59,6 +68,28 @@ class CloudBuildTask {
       res = false
     }
     return res ? this.success() : this.failed()
+  }
+  async prePublish() {
+    // 获取构建结果
+    const buildPath = this.findBuildPath()
+    // 检查构建结果
+    if (!buildPath) {
+      return this.failed('未找到构建结果,请检查')
+    }
+    this._buildPath = buildPath
+    return this.success()
+  }
+  async publish() {}
+  findBuildPath() {
+    const buildDir = ['dist', 'build']
+    const buildPath = buildDir.find((dir) =>
+      fs.existsSync(path.resolve(this._sourceCodeDir, dir))
+    )
+    this._ctx.logger.info('buildPath', buildPath)
+    if (buildPath) {
+      return path.resolve(this._sourceCodeDir, buildPath)
+    }
+    return null
   }
   execCommand(command) {
     // npm install -> ['npm', 'install']

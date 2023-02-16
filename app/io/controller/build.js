@@ -106,6 +106,61 @@ async function build(cloudBuildTask, socket, helper) {
   }
 }
 
+async function prePublish(cloudBuildTask, socket, helper) {
+  socket.emit(
+    'build',
+    helper.parseMsg('pre-publish', {
+      message: '开始发布前预检查'
+    })
+  )
+  const prePublishRes = await cloudBuildTask.prePublish()
+  if (!prePublishRes || prePublishRes.code === FAILED) {
+    socket.emit(
+      'build',
+      helper.parseMsg('pre-publish failed', {
+        message:
+          '发布前预检查执行失败, 失败原因：' +
+          (prePublishRes && prePublishRes.message
+            ? prePublishRes.message
+            : '未知错误')
+      })
+    )
+    throw new Error('发布终止')
+  } else {
+    socket.emit(
+      'build',
+      helper.parseMsg('pre-publish', {
+        message: '发布前预检查通过'
+      })
+    )
+  }
+}
+async function publish(cloudBuildTask, socket, helper) {
+  socket.emit(
+    'build',
+    helper.parseMsg('publish', {
+      message: '开始启动云构建'
+    })
+  )
+  const publishRes = await cloudBuildTask.publish()
+  if (!publishRes || publishRes.code === FAILED) {
+    socket.emit(
+      'build',
+      helper.parseMsg('publish failed', {
+        message: '云构建任务执行失败'
+      })
+    )
+    return
+  } else {
+    socket.emit(
+      'build',
+      helper.parseMsg('publish', {
+        message: '云构建任务执行成功'
+      })
+    )
+  }
+}
+
 async function createCloudBuildTask(ctx, app) {
   const { socket, helper } = ctx
   const client = socket.id
@@ -124,7 +179,8 @@ async function createCloudBuildTask(ctx, app) {
       name: task.name,
       version: task.version,
       branch: task.branch,
-      buildCmd: task.buildCmd
+      buildCmd: task.buildCmd,
+      prod: task.prod
     },
     ctx
   )
@@ -141,6 +197,8 @@ module.exports = (app) => {
         await download(cloudBuildTask, socket, helper)
         await install(cloudBuildTask, socket, helper)
         await build(cloudBuildTask, socket, helper)
+        await prePublish(cloudBuildTask, socket, helper)
+        //await publish(cloudBuildTask, socket, helper)
       } catch (e) {
         socket.emit(
           'build',
