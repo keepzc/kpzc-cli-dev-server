@@ -2,9 +2,9 @@
 
 const Mongodb = require('@pick-star/cli-mongodb')
 
-const {mongodbName, mongodbUrl } = require('../../config/db')
+const { mongodbName, mongodbUrl } = require('../../config/db')
 
 function mongo() {
-    return new Mongodb(mongodbUrl,mongodbName)
+  return new Mongodb(mongodbUrl, mongodbName)
 }
 module.exports = mongo
