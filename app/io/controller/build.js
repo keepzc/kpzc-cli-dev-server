@@ -4,6 +4,56 @@ const CloudBuildTask = require('../../models/CloudBuildTask')
 const REDIS_PREFIX = 'cloudbuild'
 const { SUCCESS, FAILED } = require('../../const')
 
+async function prepare(cloudBuildTask, socket, helper) {
+  socket.emit(
+    'build',
+    helper.parseMsg('prepare', {
+      message: '开始执行构建前准备工作'
+    })
+  )
+  const prepareRes = await cloudBuildTask.prepare()
+  if (!prepareRes || prepareRes.code === FAILED) {
+    socket.emit(
+      'build',
+      helper.parseMsg('prepare failed', {
+        message: '执行构建前准备工作失败'
+      })
+    )
+    return
+  }
+  socket.emit(
+    'build',
+    helper.parseMsg('prepare', {
+      message: '构建前准备工作成功'
+    })
+  )
+}
+async function download(cloudBuildTask, socket, helper) {
+  socket.emit(
+    'build',
+    helper.parseMsg('download repo', {
+      message: '开始下载源码'
+    })
+  )
+  const downloadRes = await cloudBuildTask.download()
+  if (!downloadRes || downloadRes.code === FAILED) {
+    socket.emit(
+      'build',
+      helper.parseMsg('download failed', {
+        message: '源码下载失败'
+      })
+    )
+    return
+  } else {
+    socket.emit(
+      'build',
+      helper.parseMsg('download repo', {
+        message: '源码下载成功'
+      })
+    )
+  }
+}
+
 async function createCloudBuildTask(ctx, app) {
   const { socket, helper } = ctx
   const client = socket.id
@@ -28,34 +78,6 @@ async function createCloudBuildTask(ctx, app) {
   )
 }
 
-async function prepare(cloudBuildTask, socket, helper) {
-  socket.emit(
-    'build',
-    helper.parseMsg('prepare', {
-      message: '开始执行构建前的准备工作'
-    })
-  )
-  const preapreRes = await cloudBuildTask.preapre()
-  if (!preapreRes || preapreRes.code === FAILED) {
-    socket.emit(
-      'build',
-      helper.parseMsg('prepare failed', {
-        message:
-          '执行构建前准备工作失败，失败原因' + preapreRes
-            ? preapreRes.message
-            : '无'
-      })
-    )
-    return
-  }
-  socket.emit(
-    'build',
-    helper.parseMsg('preapre', {
-      message: '构建前准备工作成功'
-    })
-  )
-}
-
 module.exports = (app) => {
   class Controller extends app.Controller {
     async index() {
@@ -64,6 +86,7 @@ module.exports = (app) => {
       const cloudBuildTask = await createCloudBuildTask(ctx, app)
       try {
         await prepare(cloudBuildTask, socket, helper)
+        await download(cloudBuildTask, socket, helper)
       } catch (e) {
         socket.emit(
           'build',

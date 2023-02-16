@@ -1,4 +1,5 @@
 'use strict'
+const fs = require('fs')
 const path = require('path')
 const userHome = require('os').homedir()
 const fse = require('fs-extra')
@@ -27,12 +28,20 @@ class CloudBuildTask {
   }
   async prepare() {
     fse.ensureDirSync(this._dir)
-    fse.emptyDirSync(this._dir) // 清空
+    fse.emptyDirSync(this._dir)
     this._git = new Git(this._dir)
     return this.success()
   }
   success(message, data) {
     return this.response(SUCCESS, message, data)
+  }
+  async download() {
+    await this._git.clone(this._repo)
+    // 跟新 sample-git目录 当前目录下一级
+    this._git = new Git(this._sourceCodeDir)
+    // git checkout -b dev/1.1.1 origin/dev/1.1.1
+    await this._git.checkout(['-b', this._branch, `origin/${this._branch}`])
+    return fs.existsSync(this._sourceCodeDir) ? this.success() : this.failed()
   }
   failed(message, data) {
     return this.response(FAILED, message, data)
