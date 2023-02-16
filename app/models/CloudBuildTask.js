@@ -51,6 +51,15 @@ class CloudBuildTask {
       ))
     return res ? this.success() : this.failed()
   }
+  async build() {
+    let res
+    if (checkCommand(this._buildCmd)) {
+      res = await this.execCommand(this._buildCmd)
+    } else {
+      res = false
+    }
+    return res ? this.success() : this.failed()
+  }
   execCommand(command) {
     // npm install -> ['npm', 'install']
     const commands = command.split(' ')
@@ -95,6 +104,18 @@ class CloudBuildTask {
     }
   }
 }
+
+function checkCommand(command) {
+  if (command) {
+    const commands = command.split(' ')
+    if (commands.length === 0 || ['npm', 'cnpm'].indexOf(commands[0]) < 0) {
+      return false
+    }
+    return true
+  }
+  return false
+}
+
 function exec(command, args, options) {
   const win32 = process.platform === 'win32'
 

@@ -80,6 +80,32 @@ async function install(cloudBuildTask, socket, helper) {
   }
 }
 
+async function build(cloudBuildTask, socket, helper) {
+  socket.emit(
+    'build',
+    helper.parseMsg('build', {
+      message: '开始启动云构建'
+    })
+  )
+  const buildRes = await cloudBuildTask.build()
+  if (!buildRes || buildRes.code === FAILED) {
+    socket.emit(
+      'build',
+      helper.parseMsg('build failed', {
+        message: '云构建任务执行失败'
+      })
+    )
+    return
+  } else {
+    socket.emit(
+      'build',
+      helper.parseMsg('build', {
+        message: '云构建任务执行成功'
+      })
+    )
+  }
+}
+
 async function createCloudBuildTask(ctx, app) {
   const { socket, helper } = ctx
   const client = socket.id
@@ -114,6 +140,7 @@ module.exports = (app) => {
         await prepare(cloudBuildTask, socket, helper)
         await download(cloudBuildTask, socket, helper)
         await install(cloudBuildTask, socket, helper)
+        await build(cloudBuildTask, socket, helper)
       } catch (e) {
         socket.emit(
           'build',
