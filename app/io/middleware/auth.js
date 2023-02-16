@@ -21,6 +21,9 @@ module.exports = () => {
         await redis.set(`${REDIS_PREFIX}:${id}`, JSON.stringify(query))
       }
       hasTask = await redis.get(`${REDIS_PREFIX}:${id}`)
+      if (!hasTask) {
+        logger.error('redis reeor', 'Redis服务异常,请重新启动redis!')
+      }
       await next()
       console.log('disconnect!')
     } catch (e) {
