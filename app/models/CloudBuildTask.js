@@ -5,8 +5,8 @@ const userHome = require('os').homedir()
 const fse = require('fs-extra')
 const Git = require('simple-git')
 const { SUCCESS, FAILED } = require('../const')
-// const config = require('../../config/db')
-// const OSS = require('../models/OSS')
+const config = require('../../config/db')
+const OSS = require('../models/OSS')
 
 class CloudBuildTask {
   constructor(options, ctx) {
@@ -23,7 +23,7 @@ class CloudBuildTask {
       'cloudbuild',
       `${this._name}@${this._version}`
     ) //缓存目录
-    this._prod = options.prod // 是否正式发布
+    this._prod = options.prod === 'true' // 是否正式发布
     this._sourceCodeDir = path.resolve(this._dir, this._name) // 缓存源码的目录
     this._logger.info('_dir', this._dir)
     this._logger.info('_sourceCodeDir', this._sourceCodeDir)
@@ -34,11 +34,10 @@ class CloudBuildTask {
     fse.emptyDirSync(this._dir)
     this._git = new Git(this._dir)
     if (this._prod) {
-      // this.oss = new OSS(config.OSS_PROD_BUCKET)
+      this.oss = new OSS(config.OSS_PROD_BUCKET)
     } else {
-      // this.oss = new OSS(config.OSS_DEV_BUCKET)
+      this.oss = new OSS(config.OSS_DEV_BUCKET)
     }
-    // console.log(this.oss)
     return this.success()
   }
   success(message, data) {
