@@ -3,6 +3,7 @@ const fs = require('fs')
 const path = require('path')
 const userHome = require('os').homedir()
 const fse = require('fs-extra')
+const glob = require('glob')
 const Git = require('simple-git')
 const { SUCCESS, FAILED } = require('../const')
 const config = require('../../config/db')
@@ -78,7 +79,40 @@ class CloudBuildTask {
     this._buildPath = buildPath
     return this.success()
   }
-  async publish() {}
+  async publish() {
+    return new Promise((resolve) => {
+      glob(
+        '**',
+        {
+          cwd: this._buildPath,
+          nodir: true,
+          ignore: '**/node_modules/**'
+        },
+        (err, files) => {
+          if (err) {
+            resolve(false)
+          }
+          Promise.all(
+            files.map(async (file) => {
+              const filePath = path.resolve(this._buildPath, file)
+              const uploadedOSSRes = await this.oss.put(
+                `${this._name}/${file}`,
+                filePath
+              )
+              return uploadedOSSRes
+            })
+          )
+            .then(() => {
+              resolve(true)
+            })
+            .catch((err) => {
+              this._ctx.logger.error(err)
+              resolve(false)
+            })
+        }
+      )
+    })
+  }
   findBuildPath() {
     const buildDir = ['dist', 'build']
     const buildPath = buildDir.find((dir) =>

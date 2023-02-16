@@ -11,6 +11,9 @@ class OSS {
       region: config.OSS_REGION
     })
   }
+  async put(object, localPath, options = {}) {
+    await this.oss.put(object, localPath, options)
+  }
 }
 
 module.exports = OSS

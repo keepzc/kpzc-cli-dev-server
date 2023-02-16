@@ -139,15 +139,15 @@ async function publish(cloudBuildTask, socket, helper) {
   socket.emit(
     'build',
     helper.parseMsg('publish', {
-      message: '开始启动云构建'
+      message: '开始发布项目'
     })
   )
   const publishRes = await cloudBuildTask.publish()
-  if (!publishRes || publishRes.code === FAILED) {
+  if (!publishRes) {
     socket.emit(
       'build',
       helper.parseMsg('publish failed', {
-        message: '云构建任务执行失败'
+        message: '发布项目失败'
       })
     )
     return
@@ -155,7 +155,7 @@ async function publish(cloudBuildTask, socket, helper) {
     socket.emit(
       'build',
       helper.parseMsg('publish', {
-        message: '云构建任务执行成功'
+        message: '发布项目成功'
       })
     )
   }
@@ -198,7 +198,7 @@ module.exports = (app) => {
         await install(cloudBuildTask, socket, helper)
         await build(cloudBuildTask, socket, helper)
         await prePublish(cloudBuildTask, socket, helper)
-        //await publish(cloudBuildTask, socket, helper)
+        await publish(cloudBuildTask, socket, helper)
       } catch (e) {
         socket.emit(
           'build',

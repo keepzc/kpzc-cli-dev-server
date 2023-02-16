@@ -13,6 +13,7 @@
     "egg-scripts": "^2",
     "egg-socket.io": "^4.1.6",
     "fs-extra": "^11.1.0",
+    "glob": "^8.1.0",
     "simple-git": "^3.16.0",
     "user-home": "^3.0.0"
   },
