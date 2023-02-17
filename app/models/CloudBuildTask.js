@@ -8,10 +8,12 @@ const Git = require('simple-git')
 const { SUCCESS, FAILED } = require('../const')
 const config = require('../../config/db')
 const OSS = require('../models/OSS')
+const REDIS_PREFIX = 'cloudbuild'
 
 class CloudBuildTask {
-  constructor(options, ctx) {
+  constructor(options, ctx, app) {
     this._ctx = ctx
+    this._app = app
     this._logger = this._ctx.logger
     this._repo = options.repo // 仓库地址
     this._name = options.name // 项目名称
@@ -113,6 +115,19 @@ class CloudBuildTask {
       )
     })
   }
+  // 清除缓存目录和redis key
+  async clean() {
+    const { socket } = this._ctx
+    const client = socket.id
+    const redisKey = `${REDIS_PREFIX}:${client}`
+    if (fs.existsSync(this._dir)) {
+      fse.removeSync(this._dir)
+    }
+    await this._app.redis.del(redisKey)
+  }
+  isProd() {
+    return this._prod
+  }
   findBuildPath() {
     const buildDir = ['dist', 'build']
     const buildPath = buildDir.find((dir) =>
@@ -182,10 +197,35 @@ function checkCommand(command) {
 
 function exec(command, args, options) {
   const win32 = process.platform === 'win32'
-
   const cmd = win32 ? 'cmd' : command
   const cmdArgs = win32 ? ['/c'].concat(command, args) : args
-
   return require('child_process').spawn(cmd, cmdArgs, options || {})
 }
-module.exports = CloudBuildTask
+// 创建返回一个类的工厂函数
+async function createCloudBuildTask(ctx, app) {
+  const { socket, helper } = ctx
+  const client = socket.id
+  const redisKey = `${REDIS_PREFIX}:${client}`
+  const redisTask = await app.redis.get(redisKey)
+  const task = JSON.parse(redisTask)
+  socket.emit(
+    'build',
+    helper.parseMsg('create task', {
+      message: '创建云构建任务成功'
+    })
+  )
+  return new CloudBuildTask(
+    {
+      repo: task.repo,
+      name: task.name,
+      version: task.version,
+      branch: task.branch,
+      buildCmd: task.buildCmd,
+      prod: task.prod
+    },
+    ctx,
+    app
+  )
+}
+
+module.exports = { CloudBuildTask, createCloudBuildTask }

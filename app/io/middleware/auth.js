@@ -1,6 +1,8 @@
 // app/io/middleware/auth.js
 'use strict'
+const { createCloudBuildTask } = require('../../models/CloudBuildTask')
 const REDIS_PREFIX = 'cloudbuild'
+
 module.exports = () => {
   return async (ctx, next) => {
     const { app, socket, logger, helper } = ctx
@@ -25,9 +27,13 @@ module.exports = () => {
         logger.error('redis reeor', 'Redis服务异常,请重新启动redis!')
       }
       await next()
+      const cloudBuildTask = await createCloudBuildTask(ctx, app)
+      await cloudBuildTask.clean()
       console.log('disconnect!')
     } catch (e) {
       logger.error('build error', e.message)
+      const cloudBuildTask = await createCloudBuildTask(ctx, app)
+      await cloudBuildTask.clean()
     }
   }
 }

@@ -1,8 +1,8 @@
 'use strict'
 
-const CloudBuildTask = require('../../models/CloudBuildTask')
-const REDIS_PREFIX = 'cloudbuild'
-const { SUCCESS, FAILED } = require('../../const')
+const { createCloudBuildTask } = require('../../models/CloudBuildTask')
+
+const { FAILED } = require('../../const')
 
 async function prepare(cloudBuildTask, socket, helper) {
   socket.emit(
@@ -161,31 +161,6 @@ async function publish(cloudBuildTask, socket, helper) {
   }
 }
 
-async function createCloudBuildTask(ctx, app) {
-  const { socket, helper } = ctx
-  const client = socket.id
-  const redisKey = `${REDIS_PREFIX}:${client}`
-  const redisTask = await app.redis.get(redisKey)
-  const task = JSON.parse(redisTask)
-  socket.emit(
-    'build',
-    helper.parseMsg('create task', {
-      message: '创建云构建任务成功'
-    })
-  )
-  return new CloudBuildTask(
-    {
-      repo: task.repo,
-      name: task.name,
-      version: task.version,
-      branch: task.branch,
-      buildCmd: task.buildCmd,
-      prod: task.prod
-    },
-    ctx
-  )
-}
-
 module.exports = (app) => {
   class Controller extends app.Controller {
     async index() {
@@ -199,6 +174,16 @@ module.exports = (app) => {
         await build(cloudBuildTask, socket, helper)
         await prePublish(cloudBuildTask, socket, helper)
         await publish(cloudBuildTask, socket, helper)
+        // 断开websocket连接
+        socket.emit(
+          'build',
+          helper.parseMsg('build success', {
+            message: `云构建成功， 访问连接：https://${
+              cloudBuildTask.isProd() ? 'keep-cli-sync' : 'keep-cli-sync-dev'
+            }.lovedl.xyz/${cloudBuildTask._name}`
+          })
+        )
+        socket.disconnect()
       } catch (e) {
         socket.emit(
           'build',
