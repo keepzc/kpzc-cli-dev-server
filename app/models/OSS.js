@@ -14,6 +14,15 @@ class OSS {
   async put(object, localPath, options = {}) {
     await this.oss.put(object, localPath, options)
   }
+  async list(prefix) {
+    const ossFileList = await this.oss.list({
+      prefix
+    })
+    if (ossFileList && ossFileList.objects.length > 0) {
+      return ossFileList.objects
+    }
+    return []
+  }
 }
 
 module.exports = OSS
