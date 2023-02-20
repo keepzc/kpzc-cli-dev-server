@@ -63,6 +63,13 @@ module.exports = (appInfo) => {
     app: true,
     agent: false
   }
+  //missing csrf toke  不设置的会保持，临时使用，为了安全正式使用请设置true
+  //CSRF是为了防止攻击，在发起请求前要在header里设置 x-csrf-token。x-csrf-token的值要后端取
+  config.security = {
+    csrf: {
+      enable: false
+    }
+  }
   return {
     ...config,
     ...userConfig
