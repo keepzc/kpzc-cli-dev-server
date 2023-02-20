@@ -87,6 +87,13 @@ class ComponentsController extends Controller {
         return
       }
     }
+    ctx.body = success('添加组件成功', {
+      component: await componentService.queryOne({ id: componentId }),
+      version: await versionService.queryOne({
+        component_id: componentId,
+        version: versionData.version
+      })
+    })
   }
   async show() {
     const { ctx } = this
