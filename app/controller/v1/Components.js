@@ -59,7 +59,7 @@ class ComponentsController extends Controller {
       update_dt: timestamp
     }
     const versionService = new VersionService(app)
-    const haveVersionInDB = versionService.queryOne({
+    const haveVersionInDB = await versionService.queryOne({
       component_id: componentId,
       version: versionData.version
     })
@@ -83,7 +83,7 @@ class ComponentsController extends Controller {
         version: versionData.version
       })
       if (!updateVersionRes) {
-        ctx.body = failed('跟新组件失败')
+        ctx.body = failed('更新新组件失败')
         return
       }
     }
