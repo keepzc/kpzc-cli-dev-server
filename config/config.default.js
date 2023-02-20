@@ -1,6 +1,13 @@
 /* eslint valid-jsdoc: "off" */
 
 'use strict'
+const {
+  MYSQL_DB,
+  MYSQL_HOST,
+  MYSQL_PORT,
+  MYSQL_PWD,
+  MYSQL_USER
+} = require('./db.js')
 const REDIS_PORT = 6379
 const REDIS_HOST = '127.0.0.1'
 const REDIS_PWD = ''
@@ -45,7 +52,17 @@ module.exports = (appInfo) => {
       db: 0
     }
   }
-
+  config.mysql = {
+    client: {
+      host: MYSQL_HOST,
+      port: MYSQL_PORT,
+      user: MYSQL_USER,
+      password: MYSQL_PWD,
+      database: MYSQL_DB
+    },
+    app: true,
+    agent: false
+  }
   return {
     ...config,
     ...userConfig

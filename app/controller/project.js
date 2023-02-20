@@ -67,6 +67,10 @@ class ProjectController extends Controller {
     const test = await app.redis.get('test')
     ctx.body = test
   }
+  async test() {
+    const list = await this.app.mysql.select('component')
+    this.ctx.body = list
+  }
 }
 
 module.exports = ProjectController
