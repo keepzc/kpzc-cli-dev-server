@@ -70,6 +70,10 @@ module.exports = (appInfo) => {
       enable: false
     }
   }
+  config.cors = {
+    origin: 'http://localhost:8000',
+    allowMethods: 'GET,HEAD,PUT,OPTIONS,POST,DELETE,PATCH'
+  }
   return {
     ...config,
     ...userConfig
