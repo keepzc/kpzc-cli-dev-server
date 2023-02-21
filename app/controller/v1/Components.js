@@ -1,3 +1,4 @@
+'use strict'
 const Controller = require('egg').Controller
 const ComponentService = require('../../service/ComponentService')
 const constant = require('../../const')
