@@ -14,6 +14,7 @@ const OSS_ACCESS_SECRET_KEY = fs
   .toString()
 const OSS_PROD_BUCKET = 'keep-cli-sync'
 const OSS_DEV_BUCKET = 'keep-cli-sync-dev'
+const OSS_COMPONENT_BUCKET = 'keep-cli-component'
 const OSS_REGION = 'oss-cn-beijing'
 /** MYSQL */
 const MYSQL_HOST = '43.143.251.28'
@@ -31,6 +32,7 @@ module.exports = {
   OSS_ACCESS_SECRET_KEY,
   OSS_PROD_BUCKET,
   OSS_DEV_BUCKET,
+  OSS_COMPONENT_BUCKET,
   OSS_REGION,
   MYSQL_DB,
   MYSQL_HOST,

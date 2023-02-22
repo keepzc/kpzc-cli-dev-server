@@ -1,9 +1,12 @@
 'use strict'
 const Controller = require('egg').Controller
+const axios = require('axios')
 const ComponentService = require('../../service/ComponentService')
 const constant = require('../../const')
 const { success, failed } = require('../../utils/request')
 const VersionService = require('../../service/VersionService')
+const { formatName } = require('../../utils/index')
+const ComponentTask = require('../../models/ComponentTask')
 
 class ComponentsController extends Controller {
   async index() {
@@ -123,17 +126,67 @@ class ComponentsController extends Controller {
         return
       }
     }
-    ctx.body = success('添加组件成功', {
-      component: await componentService.queryOne({ id: componentId }),
-      version: await versionService.queryOne({
-        component_id: componentId,
-        version: versionData.version
+    //3. 像OSS中上传组件预览文件
+    const task = new ComponentTask(
+      {
+        repo: git.remote,
+        version: git.version,
+        name: component.className,
+        branch: git.branch,
+        buildPath: component.buildPath,
+        examplePath: component.examplePath
+      },
+      { ctx }
+    )
+    try {
+      //3.1 .下载和构建源码
+      await task.downloadSourceCode()
+      //3.2 上传组件构建结果
+      await task.publishBuild()
+      //3.3 上传组件多预览文件
+      await task.publishExample()
+      ctx.body = success('添加组件成功', {
+        component: await componentService.queryOne({ id: componentId }),
+        version: await versionService.queryOne({
+          component_id: componentId,
+          version: versionData.version
+        })
       })
-    })
+    } catch (e) {
+      ctx.logger.error(e)
+      ctx.body = failed('添加组件失败' + e.message)
+    }
   }
   async show() {
-    const { ctx } = this
-    ctx.body = 'get single'
+    const { ctx, app } = this
+    const id = ctx.params.id
+    const result = await app.mysql.select('component', {
+      where: { id }
+    })
+    if (result && result.length > 0) {
+      const component = result[0]
+      component.versions = await app.mysql.select('version', {
+        where: {
+          component_id: id
+        },
+        orders: [['version', 'desc']]
+      })
+      // gitee: https://gitee.com/api/v5/repos/{owner}/{repo}/contents(/{path})
+      // github: https://api.github.com/repos/{owner}/{repo}/{path}
+      // let readmeUrl
+      // const name = formatName(component.classname)
+      // if (component.git_type === 'gitee') {
+      //   readmeUrl = `https://gitee.com/api/v5/repos/${component.git_login}/${name}/contents/README.md`
+      // } else {
+      //   readmeUrl = `https://api.github.com/repos/${component.git_login}/${name}/readme`
+      // }
+      // const readme = await axios.get(readmeUrl)
+      ctx.body = component
+    } else {
+      ctx.body = {}
+    }
+
+    ctx.body = result
   }
 }
 
