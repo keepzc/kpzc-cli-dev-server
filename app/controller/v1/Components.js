@@ -171,16 +171,18 @@ class ComponentsController extends Controller {
         },
         orders: [['version', 'desc']]
       })
-      // gitee: https://gitee.com/api/v5/repos/{owner}/{repo}/contents(/{path})
-      // github: https://api.github.com/repos/{owner}/{repo}/{path}
-      // let readmeUrl
-      // const name = formatName(component.classname)
-      // if (component.git_type === 'gitee') {
-      //   readmeUrl = `https://gitee.com/api/v5/repos/${component.git_login}/${name}/contents/README.md`
-      // } else {
-      //   readmeUrl = `https://api.github.com/repos/${component.git_login}/${name}/readme`
-      // }
-      // const readme = await axios.get(readmeUrl)
+      //gitee: https://gitee.com/api/v5/repos/{owner}/{repo}/contents(/{path})
+      //github: https://api.github.com/repos/{owner}/{repo}/{path}
+      let readmeUrl
+      const name = formatName(component.classname)
+      if (component.git_type === 'gitee') {
+        readmeUrl = `https://gitee.com/api/v5/repos/${component.git_login}/${name}/contents/README.md`
+      } else {
+        readmeUrl = `https://api.github.com/repos/${component.git_login}/${name}/readme`
+      }
+      console.log(readmeUrl)
+      const readme = await axios.get(readmeUrl)
+      console.log(readme)
       ctx.body = component
     } else {
       ctx.body = {}
