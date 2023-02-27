@@ -7,6 +7,7 @@ const { success, failed } = require('../../utils/request')
 const VersionService = require('../../service/VersionService')
 const { formatName } = require('../../utils/index')
 const ComponentTask = require('../../models/ComponentTask')
+const { decode } = require('js-base64')
 
 class ComponentsController extends Controller {
   async index() {
@@ -180,9 +181,16 @@ class ComponentsController extends Controller {
       } else {
         readmeUrl = `https://api.github.com/repos/${component.git_login}/${name}/readme`
       }
-      console.log(readmeUrl)
       const readme = await axios.get(readmeUrl)
-      console.log(readme)
+      if (readme.status === 200) {
+        let content = readme.data && readme.data.content
+        if (content) {
+          content = decode(content)
+          component.readme = content
+        }
+      } else {
+        component.readme = '暂无'
+      }
       ctx.body = component
     } else {
       ctx.body = {}
