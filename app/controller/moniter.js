@@ -24,6 +24,8 @@ class MonitorController extends Controller {
     const params = ctx.query;
     if (params) {
       let { appId, pageId, timestamp, ua, url, eventType } = params;
+      let userId = params.user_id;
+      let visitorId = params.visitor_id;
       if (appId && pageId && timestamp && ua && url && eventType) {
         // 1:appid
         // 2:pageid
@@ -32,6 +34,8 @@ class MonitorController extends Controller {
         // 5:url
         // 6:args
         // 7:eventtype
+        // 8:userId
+        // 9:visitorId
         let datetime = createDatetime();
         let sql = `INSERT INTO kpzc_test.kpzc_monitor PARTITION (datetime = "${datetime}") VALUES (`;
         sql = `${sql}"${appId}",`;
@@ -40,7 +44,9 @@ class MonitorController extends Controller {
         sql = `${sql}"${ua}",`;
         sql = `${sql}"{}",`;
         sql = `${sql}"${url}",`;
-        sql = `${sql}"${eventType}"`;
+        sql = `${sql}"${eventType}",`;
+        sql = `${sql}"${userId}",`;
+        sql = `${sql}"${visitorId}"`;
         sql = `${sql})`;
         const ret = execSync("python3 " + PYTHON_CONNECT_SCRIPT_PATH + ' "' + encodeURIComponent(sql) + '"'); // Buffer
         console.log(ret.toString());
@@ -50,7 +56,9 @@ class MonitorController extends Controller {
           timestamp,
           ua,
           url,
-          eventType
+          eventType,
+          userId,
+          visitorId
         };
       } else {
         ctx.body = failed("上传参数不全，请补充");
